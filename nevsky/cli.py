@@ -27,6 +27,7 @@ def translate(dump, sentence: str):
     source_bpe = BPE(source_bpe_dump)
     target_bpe = BPE(target_bpe_dump)
     model = TransformerModel.load(model_dump)
+    model.eval()
 
     source = torch.LongTensor([source_bpe.encode(sentence, bos=True, eos=True)])
     prediction = model.generate(source, GEN_LIMIT).tolist()
