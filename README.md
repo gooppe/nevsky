@@ -1,8 +1,10 @@
 # Simple and Light Translation Bot
 
+[![Build Status](https://travis-ci.com/gooppe/nevsky.svg?branch=master)](https://travis-ci.com/gooppe/nevsky)
+
 ## Requirements
 
-- python >= 3.6
+- python >= 3.7
 
 ## Installation
 
@@ -15,7 +17,7 @@ pip install git+https://github.com/gooppe/nevsky
 Download pretrained translation model:
 
 | Model             | Link                                                                           |
-|-------------------|--------------------------------------------------------------------------------|
+| ----------------- | ------------------------------------------------------------------------------ |
 | ru -> en, *small* | [ru_en_50](https://drive.google.com/open?id=1dbDou2VN2GEFF7kEfR7rhKO25smq1Cv1) |
 
 Extract dump archive and run `nevsky translate`
