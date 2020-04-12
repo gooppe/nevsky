@@ -1,0 +1,6 @@
+torch==1.4.0
+youtokentome>=1.0.6
+flake8
+pytest
+black
+tqdm

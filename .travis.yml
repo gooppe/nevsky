@@ -1,0 +1,11 @@
+language: python
+python:
+  - "3.7"
+
+install:
+  - python3 -m pip install -U pip
+  - pip install -r requirements.txt
+
+script:
+  - black --check --diff nevsky tests examples
+  - python3 -m pytest tests -x -v
