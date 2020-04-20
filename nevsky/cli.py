@@ -35,5 +35,12 @@ def translate(dump, sentence: str):
 
     print(translation)
 
+@click.command()
+def bot():
+    from nevsky import bot
+
+    bot.run_bot()
 
 main.add_command(translate)
+
+main.add_command(bot)
