@@ -1,6 +1,9 @@
-torch==1.4.0
+-f https://download.pytorch.org/whl/torch_stable.html  
+torch==1.4.0+cpu
 youtokentome>=1.0.6
+pyTelegramBotAPI
 flake8
 pytest
 black
 tqdm
+./ # install nevsky from source
