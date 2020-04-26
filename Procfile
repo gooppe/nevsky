@@ -1,1 +1,1 @@
-bot: nevsky bot
+bot: nevsky download ru_en_50 && nevsky bot ru_en_50
