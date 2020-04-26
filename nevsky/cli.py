@@ -37,12 +37,21 @@ def translate(dump, sentence: str):
 
 
 @click.command()
-def bot():
+@click.argument("model_name", type=click.STRING)
+def bot(model_name):
     from nevsky import bot
 
-    bot.run_bot()
+    bot.run_bot(model_name)
+
+
+@click.command()
+@click.argument("model_name", type=click.STRING)
+def download(model_name):
+    from nevsky import manager
+
+    manager.install_model(model_name)
 
 
 main.add_command(translate)
-
 main.add_command(bot)
+main.add_command(download)
