@@ -12,6 +12,7 @@ setup(
         "tqdm",
         "numpy",
         "pyTelegramBotAPI",
+        "pyyaml"
     ],
     entry_points={"console_scripts": ["nevsky = nevsky.cli:main"]},
 )

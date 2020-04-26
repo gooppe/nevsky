@@ -6,4 +6,5 @@ flake8
 pytest
 black
 tqdm
+pyyaml
 ./ # install nevsky from source
