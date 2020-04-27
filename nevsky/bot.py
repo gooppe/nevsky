@@ -1,11 +1,12 @@
 import os
 
+import logging
 import telebot
 import torch
 from nevsky.models import TransformerModel
 from youtokentome import BPE
 
-token = os.environ["TELEGRAM_TOKEN"]
+logger = logging.getLogger(__name__)
 
 
 def run_bot(model: str):
@@ -17,6 +18,7 @@ def run_bot(model: str):
     target_bpe_dump = os.path.join(dump_dir, "target_bpe.model")
     model_dump = os.path.join(dump_dir, "model.pth")
 
+    logger.info(f"Start loading {model} dump")
     source_bpe = BPE(source_bpe_dump)
     target_bpe = BPE(target_bpe_dump)
     model = TransformerModel.load(model_dump)
@@ -25,6 +27,8 @@ def run_bot(model: str):
 
     @bot.message_handler(func=lambda message: True)
     def echo_all(message):
+        logger.info(f"New message from {message.chat.username}")
+
         encoded_source = source_bpe.encode(message.text, bos=True, eos=True)[:gen_limit]
         source = torch.LongTensor([encoded_source])
         prediction = model.generate(source, gen_limit).tolist()
@@ -32,4 +36,5 @@ def run_bot(model: str):
 
         bot.reply_to(message, translation)
 
+    logger.info(f"Start pooling messages")
     bot.polling()

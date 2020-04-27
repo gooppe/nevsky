@@ -3,6 +3,9 @@ import hashlib
 import tarfile
 import json
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def md5(fname):
@@ -14,18 +17,18 @@ def md5(fname):
 
 
 def download_model_dump(link: str, checksum: str, dump_foler: str):
-    print(f"Start downloading {link} dump file")
+    logger.info(f"Start downloading {link} dump file")
 
     tmp_file, _ = urllib.request.urlretrieve(link)
     if md5(tmp_file) != checksum:
         raise RuntimeError(f"Incorrect checksum for f{link}")
     else:
-        print(f"Checksum {tmp_file} is valid")
+        logger.info(f"Checksum {tmp_file} is valid")
 
     with tarfile.open(tmp_file) as tar:
         tar.extractall(path=dump_foler)
         os.remove(tmp_file)
-        print("Model dump has been extracted")
+        logger.info("Model dump has been extracted")
 
 
 def install_model(model_name: str, install_dir="dumps", config="config.json"):
