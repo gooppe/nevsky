@@ -13,6 +13,7 @@ setup(
         "numpy",
         "pyTelegramBotAPI",
         "pyyaml",
+        "psycopg2-binary",
     ],
     entry_points={"console_scripts": ["nevsky = nevsky.cli:main"]},
 )

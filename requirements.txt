@@ -7,4 +7,5 @@ pytest
 black
 tqdm
 pyyaml
+psycopg2-binary
 ./ # install nevsky from source
