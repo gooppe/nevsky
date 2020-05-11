@@ -1,29 +1,16 @@
-import click
 import os
-import logging.config
-import yaml
 
+import click
+import nevsky.bot
+import nevsky.manager
+import nevsky.utils
 
-def setup_logging(
-    default_path="logging.yaml", default_level=logging.INFO, env_key="LOG_CFG"
-):
-    path = default_path
-    value = os.getenv(env_key, None)
-    if value:
-        path = value
-    if os.path.exists(path):
-        with open(path, "rt") as f:
-            config = yaml.safe_load(f.read())
-        logging.config.dictConfig(config)
-    else:
-        logging.basicConfig(level=default_level)
-
-
-setup_logging()
+nevsky.utils.setup_logging()
 
 
 @click.group()
 def main():
+    """Simple translation bot. Supports full-text and dictionary translation."""
     pass
 
 
@@ -33,6 +20,7 @@ def main():
 )
 @click.argument("sentence", type=click.STRING)
 def translate(dump, sentence: str):
+    """Translate sentence using comand line interface."""
     import torch
 
     from nevsky.models import TransformerModel
@@ -59,17 +47,15 @@ def translate(dump, sentence: str):
 @click.command()
 @click.argument("model_name", type=click.STRING)
 def bot(model_name):
-    from nevsky import bot
-
-    bot.run_bot(model_name)
+    """Run bot using MODEL_NAME dump file."""
+    nevsky.bot.run_bot(model_name)
 
 
 @click.command()
 @click.argument("model_name", type=click.STRING)
 def download(model_name):
-    from nevsky import manager
-
-    manager.install_model(model_name)
+    """Download pretrained MODEL_NAME dump file."""
+    nevsky.manager.install_model(model_name)
 
 
 main.add_command(translate)
