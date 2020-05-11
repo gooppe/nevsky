@@ -1,29 +1,64 @@
-# Simple and Light Translation Bot
+﻿# Simple and Light Translation Bot
 
 [![Build Status](https://travis-ci.com/gooppe/nevsky.svg?branch=master)](https://travis-ci.com/gooppe/nevsky)
 
+- [Simple and Light Translation Bot](#simple-and-light-translation-bot)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Documentation](#documentation)
+    - [Environment variables](#environment-variables)
+    - [Installing dictionary](#installing-dictionary)
+    - [Installing models](#installing-models)
+  - [Usage](#usage)
+    - [Command line interface](#command-line-interface)
+    - [Running local bot](#running-local-bot)
+
 ## Requirements
 
-- python >= 3.7
+- python >= 3.6
+- pytorch == 1.4
+- psycopg2
 
 ## Installation
-
+Local installation:
 ```bash
 pip install git+https://github.com/gooppe/nevsky
 ```
 
-## Usage
-
-Download pretrained translation model:
-
-| Model             | Link                                                                           |
-| ----------------- | ------------------------------------------------------------------------------ |
-| ru -> en, *small* | [ru_en_50](https://drive.google.com/open?id=1dbDou2VN2GEFF7kEfR7rhKO25smq1Cv1) |
-
-Extract dump archive and run `nevsky translate`
-
+Using docker:
 ```bash
-nevsky translate ru_en_50 'Привет, Мир!'
+git clone https://github.com/gooppe/nevsky.git
+docker build -t nevsky nevsky/
 ```
 
-The first argument is a dump folder, the second is an input sentence.
+## Documentation
+### Environment variables
+In order to launch the bot, you must specify two variables: `TELEGRAM_TOKEN` and `DATABASE_URL`. Database url is a *PosgreSQL* connection string. During the deployment to *Heroku*, these configuration variables are set via the control panel or generated automatically when using Postgres add-ons.
+
+### Installing dictionary                                                                         |
+
+In order to support dictionary-based translation package requires PostgreSQL database. It is possible to export lang dictionary using [data.py](nevsky/data.py) script:
+
+```bash
+python data.py --df dictionary.xdxf --table ru_en
+```
+
+### Installing models
+Install pretrained translation model:
+```bash
+nevsky download ru_en_50
+```
+
+## Usage
+### Command line interface
+
+Translate sentence via command line:
+```bash
+nevsky translate dumps/ru_en_50 'Привет, Мир!'
+```
+
+### Running local bot
+In order to run bot localy:
+```bash
+nevsky bot ru_en_50
+```
