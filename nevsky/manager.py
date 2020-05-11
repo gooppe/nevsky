@@ -1,14 +1,21 @@
 import urllib.request
 import hashlib
-import tarfile
 import json
-import os
 import logging
+import os
+import tarfile
+import urllib.request
 
 logger = logging.getLogger(__name__)
 
 
-def md5(fname):
+def md5(fname: str) -> str:
+    """Calculate md5 hash of file.
+    Args:
+        fname (str): name of file.
+    Returns:
+        str: hash.
+    """
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -17,6 +24,14 @@ def md5(fname):
 
 
 def download_model_dump(link: str, checksum: str, dump_foler: str):
+    """Download pretrained translation model dump.
+    Args:
+        link (str): dump link.
+        checksum (str): dump's checksum.
+        dump_foler (str): dump's directory to store.
+    Raises:
+        RuntimeError: raises if checksum is invalid.
+    """
     logger.info(f"Start downloading {link} dump file")
 
     tmp_file, _ = urllib.request.urlretrieve(link)
@@ -32,6 +47,14 @@ def download_model_dump(link: str, checksum: str, dump_foler: str):
 
 
 def install_model(model_name: str, install_dir="dumps", config="config.json"):
+    """Install downloaded model.
+    Args:
+        model_name (str): model name.
+        install_dir (str, optional): model installation directory. Defaults to "dumps".
+        config (str, optional): model configuration file. Defaults to "config.json".
+    Raises:
+        RuntimeError: raises if checksum of downloaded model is invalid.
+    """
     with open(config) as config_file:
         config = json.load(config_file)
 
