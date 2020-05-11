@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import os
 from typing import List
 
@@ -13,6 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 def format_words(word: str, translations: List[str]) -> str:
+    """Format dictionary-translated words response.
+    Args:
+        word (str): Original word.
+        translations (List[str]): word translations.
+    Returns:
+        str: formated response.
+    """
+
     if len(translations) == 0:
         return f"Для слова {word} не найден словарный перевод"
 
@@ -23,6 +31,10 @@ def format_words(word: str, translations: List[str]) -> str:
 
 
 def run_bot(model: str):
+    """Run bot.
+    Args:
+        model (str): name of translation model.
+    """
     token = os.environ["TELEGRAM_TOKEN"]
     bot = telebot.TeleBot(token)
     dump_dir = os.path.join("dumps/", model)
@@ -54,7 +66,10 @@ def run_bot(model: str):
 
         text = " ".join(m.text.split(" ")[1:])
         if len(text.strip()) == 0:
-            bot.send_message(m.chat.id, "Введите текст после команды")
+            logger.error(f"Translation error for '{text}': translation is empty.")
+            translation = "Ошибка перевода"
+
+        bot.send_message(m.chat.id, translation)
             return
 
         encoded_source = source_bpe.encode(text, bos=True, eos=True)[:gen_limit]
