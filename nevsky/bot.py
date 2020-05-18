@@ -122,7 +122,8 @@ def send_word(m):
     words = test_state[m.chat.username]["words"]
     word = words[state]
 
-    candidate_words = random.sample(words[:state] + words[state + 1 :]) + [word]
+    candidate_words = random.sample(words[:state] + words[state + 1 :], 3)
+    candidate_words = random.sample(candidate_words + [word], 4)
     markup = telebot.types.ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
     buttons = [telebot.types.KeyboardButton(w[0]) for w in candidate_words]
     markup.add(*buttons)
