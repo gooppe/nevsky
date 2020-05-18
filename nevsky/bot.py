@@ -159,6 +159,7 @@ def check_answer(m):
         response = f"Вы перевели {score} из {n_words} слов\n"
         response += f"Ваша оценка: {score / n_words * 100}%"
         bot.send_message(m.chat.id, response)
+        del test_state[username]
     else:
         send_word(m)
 
