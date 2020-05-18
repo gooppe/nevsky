@@ -6,7 +6,7 @@ import torch
 from youtokentome import BPE
 
 import telebot
-from nevsky.dictionary import select_translation
+from nevsky.dictionary import select_translation, take_random_words
 from nevsky.models import TransformerModel
 
 logger = logging.getLogger(__name__)
@@ -49,6 +49,8 @@ def run_bot(model: str):
     model = TransformerModel.load(model_dump)
     model.eval()
     gen_limit = model.transformer.max_seq_len
+
+    test_state = {}
 
     @bot.message_handler(commands=["start", "help"])
     def help(m):
@@ -93,6 +95,65 @@ def run_bot(model: str):
         for word in words:
             translations = select_translation(word)
             bot.send_message(m.chat.id, format_words(word, translations))
+
+
+@bot.message_handler(commands=["test", "t"])
+def run_test(m):
+    logger.info(f"New test request from {m.chat.username}")
+
+    params = m.text.split(" ")[1:]
+    if len(params) < 1:
+        n_words = 10
+    else:
+        n_words = min(int(params[0]), 30)
+
+    test_state[m.chat.username] = {
+        "words": take_random_words(n_words),
+        "state": 0,
+        "score": 0,
+    }
+    bot.send_message(
+        m.chat.id, "Тест запущен! Напишите перевод для предлагаемых сообщений."
+    )
+    send_word(m)
+
+
+def send_word(m):
+    state = test_state[m.chat.username]["state"]
+    word = test_state[m.chat.username]["words"][state]
+
+    bot.send_message(m.chat.id, f"Напишите перевод для слова {word[1]}")
+
+
+@bot.message_handler(func=lambda message: not message.text.startswith("/"))
+def check_answer(m):
+    username = m.chat.username
+    if username not in test_state:
+        return
+
+    state = test_state[username]["state"]
+    words = test_state[username]["words"]
+    n_words = len(words)
+    word = words[state][0]
+
+    test_state[username]["state"] += 1
+
+    answer = m.text.lower().strip()
+    if answer == word:
+        test_state[username]["score"] += 1
+        response = f"Верно!"
+    else:
+        response = f"Неверно, правильный перевод: {word}"
+
+    bot.send_message(m.chat.id, response)
+
+    if state + 1 == n_words:
+        score = test_state[username]["score"]
+        response = f"Вы перевели {score} из {n_words} слов\n"
+        response += f"Ваша оценка: {score / n_words * 100}%"
+        bot.send_message(m.chat.id, response)
+    else:
+        send_word(m)
 
     logger.info(f"Start pooling messages")
     bot.polling()
