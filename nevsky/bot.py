@@ -71,7 +71,6 @@ def run_bot(model: str):
             translation = "Ошибка перевода"
 
         bot.send_message(m.chat.id, translation)
-            return
 
         encoded_source = source_bpe.encode(text, bos=True, eos=True)[:gen_limit]
         source = torch.LongTensor([encoded_source])

@@ -23,6 +23,7 @@ def select_translation(word: str, table="ru_en") -> List[str]:
             cursor.execute(sql, (word,))
             return [row[0] for row in cursor]
 
+
 def take_random_words(n: int, table="ru_en") -> List[Tuple[str, str]]:
     """Take n random words from table.
     Args:
