@@ -104,7 +104,7 @@ def run_test(m):
     if len(params) < 1:
         n_words = 10
     else:
-        n_words = min(int(params[0]), 30)
+        n_words = max(min(int(params[0]), 30), 4)
 
     test_state[m.chat.username] = {
         "words": take_random_words(n_words),
