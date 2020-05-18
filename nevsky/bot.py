@@ -96,7 +96,7 @@ def run_bot(model: str):
             bot.send_message(m.chat.id, format_words(word, translations))
 
 
-@bot.message_handler(commands=["test", "t"])
+@bot.message_handler(commands=["quiz", "q"])
 def run_test(m):
     logger.info(f"New test request from {m.chat.username}")
 
