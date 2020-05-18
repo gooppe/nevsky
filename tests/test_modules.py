@@ -170,7 +170,7 @@ def test_Transformer_forward():
 
 
 def test_Transformer_generate():
-    batch_size, hidden_size, inner_size, vocab_size = 8, 32, 64, 100
+    batch_size, hidden_size, inner_size, vocab_size = 1, 32, 64, 100
     num_layers, num_heads = 3, 8
     max_seq_len, source_len, limit = 100, 10, 9
     embeddings = torch.nn.Embedding(vocab_size, hidden_size)

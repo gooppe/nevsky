@@ -553,9 +553,11 @@ class Transformer(nn.Module):
         Returns:
             torch.LongTensor: generated tensor of shape `batch_size, gen_len`.
         """
-        assert limit <= self.max_seq_len
-
+        beam_size = 3
         batch_size, _ = source.shape
+        assert limit <= self.max_seq_len
+        assert batch_size == 1
+
         device = source.device
 
         encoder_emb = self.encoder_embeddings(source)
@@ -566,17 +568,75 @@ class Transformer(nn.Module):
         prediction = torch.full(
             (batch_size, 1), bos_token, dtype=torch.long, device=device
         )
-        generated = torch.full_like(prediction, 0).bool()
+        initial_tokens = prediction.repeat(beam_size, 1)
+        beamsearch = BeamSearch1B(initial_tokens, beam_size)
         cache = None
 
         for i in range(1, limit):
             decoder_emb = self.decoder_embeddings(prediction).narrow(1, -1, 1)
             decoder_repr, cache = self.decoder(decoder_emb, encoder_repr, cache=cache)
-            distribution = self.out_to_vocab(decoder_repr).argmax(-1)
-            prediction = torch.cat((prediction, distribution), dim=1)
+            distribution = self.out_to_vocab(decoder_repr)[:, 0].softmax(-1)
+            prediction, (encoder_repr, cache) = beamsearch.update(
+                distribution, (encoder_repr, cache)
+            )
 
-            generated = generated | (distribution == eos_token)
-            if torch.all(generated):
-                break
+            generated = torch.sum(prediction == eos_token, dim=-1, dtype=torch.bool)
+            if torch.any(generated):
+                return prediction[generated]
 
-        return prediction
+        return prediction[0:1]
+
+
+class BeamSearch1B:
+    def __init__(self, initial_tokens: torch.LongTensor, beam_size: int = 6):
+        """One batch beams search decoding alogrithm.
+
+        Args:
+            initial_tokens (torch.LongTensor): tensor of shape `Beam, N`.
+            beam_size (int): number of beams.
+            trailing_token (int): eos trailing token.
+        """
+        # beam, n
+        self.candidates = initial_tokens
+        # beam, 1
+        self.scores = torch.zeros(beam_size, 1, device=initial_tokens.device)
+        self.beam_size = beam_size
+
+    def update(
+        self, prediction: torch.FloatTensor, cache: Tuple[torch.Tensor, ...] = None,
+    ):
+        """Update beam search.
+
+        Args:
+            prediction (torch.FloatTensor): tensor of shape `Beam, Vocab`.
+            cache (Tuple[torch.FloatTensor, ...], optional): cache tensors of shape
+                `Beam, ...`. Defaults to None.
+        Returns:
+            Union[torch.LongTensor, Tuple[torch.LongTensor, Tuple[torch.Tensor, ...]]]:
+                reordered candidate seqeunce and cache tensor if provided.
+        """
+        beam_size, vocab_size = prediction.size()
+
+        # For beam size equals to `1` perform initial scoring
+        if beam_size == 1:
+            rescored_prediction = torch.log(prediction)
+        else:
+            rescored_prediction = self.scores + torch.log(prediction)
+        rescored_prediction = rescored_prediction.view(-1)
+
+        # beam
+        values, indices = torch.topk(rescored_prediction, self.beam_size)
+        beam_indices = indices // vocab_size
+        selected_tokens = indices % vocab_size
+        # beam, n
+        reordered_candidates = self.candidates[beam_indices]
+        self.candidates = torch.cat(
+            (reordered_candidates, selected_tokens.unsqueeze(-1)), -1
+        )
+        self.scores = values.unsqueeze(-1)
+
+        if cache is not None:
+            reordered_cache = tuple(t[beam_indices] for t in cache)
+            return self.candidates, reordered_cache
+
+        return self.candidates
