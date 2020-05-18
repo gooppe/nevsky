@@ -1,10 +1,9 @@
 ﻿import logging
 import os
 from typing import List
-
 import torch
 from youtokentome import BPE
-
+import random
 import telebot
 from nevsky.dictionary import select_translation, take_random_words
 from nevsky.models import TransformerModel
@@ -120,9 +119,16 @@ def run_test(m):
 
 def send_word(m):
     state = test_state[m.chat.username]["state"]
-    word = test_state[m.chat.username]["words"][state]
+    words = test_state[m.chat.username]["words"]
+    word = words[state]
 
-    bot.send_message(m.chat.id, f"Напишите перевод для слова {word[1]}")
+    candidate_words = random.sample(words[:state] + words[state + 1 :]) + [word]
+    markup = telebot.types.ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
+    buttons = [telebot.types.KeyboardButton(w[0]) for w in candidate_words]
+    markup.add(*buttons)
+    bot.send_message(
+        m.chat.id, f"Выберите перевод слова {word[1]}", reply_markup=markup
+    )
 
 
 @bot.message_handler(func=lambda message: not message.text.startswith("/"))
