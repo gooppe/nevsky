@@ -1,13 +1,17 @@
-from typing import Collection, Tuple, Union
+import logging
+import os
+from typing import Collection, Generator, List, Tuple, Union
 
 import torch
-from torch import nn
-
+import youtokentome as yttm
 from nevsky.modules import Transformer
+from torch import nn
 
 EmbeddingDescription = Union[
     str, Tuple[str, str], Tuple[int, int], Tuple[Tuple[int, int], Tuple[int, int]],
 ]
+
+logger = logging.getLogger(__name__)
 
 
 class TransformerModel(nn.Module):
@@ -168,3 +172,57 @@ class TransformerModel(nn.Module):
         model.load_state_dict(state_dict)
 
         return model
+
+
+class TranslatorInferenceModel:
+    SOURCE_BPE_FILENAME = "source_bpe.model"
+    TARGET_BPE_FILENAME = "target_bpe.model"
+
+    def __init__(self, model_name: str, dump_dir: str = "dumps"):
+        model_dump_dir = os.path.join(dump_dir, model_name)
+        logger.info(f"Start loading {model_name} dump from {model_dump_dir}")
+
+        self.source_bpe, self.target_bpe, self.model = self._load_model(model_dump_dir)
+        self.gen_limit = self.model.transformer.max_seq_len
+
+    def _load_model(
+        self, model_dump_dir: str
+    ) -> Tuple[yttm.BPE, yttm.BPE, TransformerModel]:
+        source_bpe_dump = os.path.join(model_dump_dir, self.SOURCE_BPE_FILENAME)
+        target_bpe_dump = os.path.join(model_dump_dir, self.TARGET_BPE_FILENAME)
+        model_dump = os.path.join(model_dump_dir, "model.pth")
+
+        source_bpe = yttm.BPE(source_bpe_dump)
+        target_bpe = yttm.BPE(target_bpe_dump)
+        model = TransformerModel.load(model_dump)
+        model.eval()
+
+        return source_bpe, target_bpe, model
+
+    def _encode(self, text: str) -> Generator[List[int], None, None]:
+        encoded = self.source_bpe.encode(text)
+        for subseq in self._chunk_split(encoded, self.gen_limit - 2):
+            yield [1] + subseq + [2]
+
+    def _decode(self, prediction: torch.LongTensor) -> str:
+        prediction = prediction.tolist()
+        return self.target_bpe.decode(prediction, ignore_ids=(0, 1, 2))[0]
+
+    @staticmethod
+    def _chunk_split(
+        sequence: List[int], chunk_size: int
+    ) -> Generator[List[int], None, None]:
+        for i in range(0, len(sequence), chunk_size):
+            yield sequence[i : i + chunk_size]
+
+    def translate(self, text: str) -> str:
+        translations = []
+
+        for text_chunk in self._encode(text):
+            seq_tensor = torch.LongTensor([text_chunk])
+            prediction = self.model.generate(seq_tensor, self.gen_limit)
+            text = self._decode(prediction)
+            translations.append(text)
+
+        translation = " ".join(translations).strip()
+        return translation
