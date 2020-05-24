@@ -59,6 +59,7 @@ def run_bot(model: str):
             bot.send_message(m.chat.id, "Введите текст после команды")
             return
 
+        bot.send_chat_action(m.chat.id, "typing")
         translation = translator.translate(text)
 
         if len(translation) == 0:
@@ -82,6 +83,7 @@ def run_bot(model: str):
     @bot.message_handler(content_types=["photo"])
     def photo(m):
         logger.info(f"Got photo recognition request {m.chat.username}")
+        bot.send_chat_action(m.chat.id, "typing")
 
         fileID = m.photo[-1].file_id
         file_info = bot.get_file(fileID)
