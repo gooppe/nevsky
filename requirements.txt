@@ -8,4 +8,6 @@ black
 tqdm
 pyyaml
 psycopg2-binary
+pytesseract
+opencv-python
 ./ # install nevsky from source
