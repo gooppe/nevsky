@@ -7,6 +7,7 @@ import telebot
 from nevsky.dictionary import select_translation, take_random_words
 from nevsky.models import TranslatorInferenceModel
 from nevsky.ocr import recognize_binary_image
+from nevsky.pdf import extract_text_from_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +100,29 @@ def run_bot(model: str):
         if len(translation) == 0:
             logger.error(f"Translation error for '{text}': translation is empty.")
             translation = "Ошибка перевода"
+
+        bot.send_message(m.chat.id, translation)
+
+    @bot.message_handler(content_types=["document"])
+    def document(m):
+        logger.info(f"Got document translation request {m.chat.username}")
+
+        file_name = m.document.file_name
+        if file_name.endswith(".pdf"):
+            decoder = extract_text_from_pdf
+        elif file_name.endswith(".txt"):
+            decoder = lambda x: x.decode()
+        else:
+            bot.send_message(m.chat.id, "Перевод только .pdf и .txt документов")
+            return
+
+        bot.send_chat_action(m.chat.id, "typing")
+
+        file_info = bot.get_file(m.document.file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+
+        text = decoder(downloaded_file)
+        translation = translator.translate(text)
 
         bot.send_message(m.chat.id, translation)
 

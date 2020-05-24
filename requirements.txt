@@ -10,4 +10,5 @@ pyyaml
 psycopg2-binary
 pytesseract
 opencv-python
+pdfminer
 ./ # install nevsky from source
